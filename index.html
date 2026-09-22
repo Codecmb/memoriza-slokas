@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Memoriza Slokas</title>
+<link rel="manifest" href="./manifest.json">
+
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:Arial,sans-serif;background:#f4f4f4;color:#222}
+button,select,input{font:inherit}
+.top{
+ display:flex;align-items:center;gap:8px;padding:10px;
+ background:#eee;border-bottom:1px solid #bbb
+}
+.top input{width:280px;padding:7px}
+.top select{padding:7px}
+.count{margin-left:auto}
+
+.layout{
+ display:grid;grid-template-columns:310px 1fr;
+ height:calc(100vh - 58px);gap:0
+}
+.sidebar{
+ border-right:1px solid #aaa;background:white;
+ overflow:auto
+}
+.verse-item{
+ padding:9px 10px;border-bottom:1px solid #ddd;
+ cursor:pointer;font-size:14px
+}
+.verse-item.active{background:#dce8f7}
+.verse-item:hover{background:#eee}
+
+.content{
+ overflow:auto;padding:15px 20px 30px
+}
+.heading{
+ display:flex;justify-content:space-between;
+ font-weight:bold;margin-bottom:10px
+}
+.source{font-size:20px}
+.separator{border:0;border-top:1px solid #bbb;margin:10px 0 14px}
+
+.label{font-weight:bold;margin:12px 0 5px}
+.textbox{
+ background:white;border:1px solid #aaa;
+ padding:14px;white-space:pre-wrap;overflow:auto
+}
+#verse{font-size:22px;line-height:1.55;min-height:160px}
+#translation{font-size:16px;line-height:1.5;min-height:110px}
+
+.audio-status{margin:15px 0 7px;font-size:14px}
+
+.row{
+ display:grid;grid-template-columns:repeat(4,1fr);
+ gap:5px;margin-bottom:8px
+}
+button{
+ padding:10px 8px;border:1px solid #aaa;
+ background:#fafafa;border-radius:4px;cursor:pointer
+}
+button:active{background:#ddd}
+
+.group{
+ border:1px solid #aaa;border-radius:5px;
+ padding:10px;margin-top:9px
+}
+.legend{
+ font-size:13px;font-weight:bold;
+ background:#f4f4f4;padding:0 5px;
+ position:relative;top:-19px;display:inline-block
+}
+.group-content{margin-top:-10px}
+
+.rec-row{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+
+.mem-row{
+ display:flex;align-items:center;gap:7px;
+ flex-wrap:wrap
+}
+.mem-row select,.mem-row input{padding:7px}
+#pause{width:65px}
+
+.hidden{display:none!important}
+
+@media(max-width:750px){
+ .top{flex-wrap:wrap}
+ .top label{display:none}
+ .top input{width:calc(100% - 105px);flex:1}
+ .count{margin-left:0;font-size:13px}
+ .layout{display:block;height:auto}
+ .sidebar{
+   height:220px;border-right:0;
+   border-bottom:2px solid #888
+ }
+ .content{padding:14px}
+ .heading{font-size:14px}
+ .source{font-size:17px}
+ #verse{font-size:19px;min-height:130px}
+ .row{grid-template-columns:1fr 1fr}
+ .mem-row{align-items:flex-start}
+}
+
+@media(display-mode:standalone){
+ body{padding-top:env(safe-area-inset-top)}
+}
+</style>
+</head>
+
+<body>
+
+<div class="top">
+<label>Buscar:</label>
+<input id="search" placeholder="Buscar">
+<label>Fuente:</label>
+<select id="filter">
+<option>Todos</option>
+<option>Bhagavad-gita</option>
+<option>Srimad-Bhagavatam</option>
+<option>Caitanya-caritamrta</option>
+<option>Brahma-samhita</option>
+<option>Otros</option>
+</select>
+<span class="count" id="count"></span>
+</div>
+
+<div class="layout">
+
+<div class="sidebar" id="list"></div>
+
+<div class="content">
+
+<div class="heading">
+<span id="rank"></span>
+<span class="source" id="source"></span>
+</div>
+
+<hr class="separator">
+
+<div class="label">ŚLOKA</div>
+<div class="textbox" id="verse"></div>
+
+<div class="label">TRADUCCIÓN</div>
+<div class="textbox" id="translation"></div>
+
+<div class="audio-status" id="audioStatus"></div>
+
+<div class="row">
+<button id="prev">⏮ Anterior</button>
+<button id="play">▶ Reproducir</button>
+<button id="stop">■ Parar</button>
+<button id="next">Siguiente ⏭</button>
+</div>
+
+<div class="group">
+<span class="legend">Mi grabación</span>
+<div class="group-content rec-row">
+<button id="record">🎙 Grabar mi voz</button>
+<button id="deleteRecording">🗑 Borrar grabación</button>
+</div>
+</div>
+
+<div class="group">
+<span class="legend">Memorización</span>
+<div class="group-content mem-row">
+
+<label>Repetir</label>
+<select id="repeat">
+<option>1</option>
+<option>3</option>
+<option>5</option>
+<option>10</option>
+</select>
+
+<label>Pausa</label>
+<input id="pause" type="number" value="1.5" min="0" max="20" step=".5">
+
+<label>Velocidad</label>
+<select id="speed">
+<option value=".70">0.70</option>
+<option value=".85" selected>0.85</option>
+<option value="1">1.00</option>
+</select>
+
+<button id="memorize">▶ Memorizar</button>
+
+<label>Estado</label>
+<select id="status">
+<option>Nuevo</option>
+<option>Aprendiendo</option>
+<option>Memorizado</option>
+</select>
+
+</div>
+</div>
+
+<audio id="audio" preload="metadata"></audio>
+
+</div>
+</div>
+
+<script>
+let verses=[];
+let audioMap={};
+let filtered=[];
+let currentRank=null;
+
+let mediaRecorder=null;
+let recordingChunks=[];
+let recordingStream=null;
+
+let memorizing=false;
+let memorizeRemaining=0;
+let memorizePause=1500;
+
+const audio=document.getElementById("audio");
+const $=x=>document.getElementById(x);
+
+const DBNAME="MemorizaSlokasDB";
+const STORE="recordings";
+
+function openDB(){
+ return new Promise((resolve,reject)=>{
+   const req=indexedDB.open(DBNAME,1);
+   req.onupgradeneeded=()=>{
+     if(!req.result.objectStoreNames.contains(STORE))
+       req.result.createObjectStore(STORE);
+   };
+   req.onsuccess=()=>resolve(req.result);
+   req.onerror=()=>reject(req.error);
+ });
+}
+
+async function getRecording(rank){
+ const db=await openDB();
+ return new Promise(resolve=>{
+   const tx=db.transaction(STORE,"readonly");
+   const req=tx.objectStore(STORE).get(String(rank));
+   req.onsuccess=()=>resolve(req.result||null);
+   req.onerror=()=>resolve(null);
+ });
+}
+
+async function saveRecording(rank,blob){
+ const db=await openDB();
+ return new Promise((resolve,reject)=>{
+   const tx=db.transaction(STORE,"readwrite");
+   tx.objectStore(STORE).put(blob,String(rank));
+   tx.oncomplete=resolve;
+   tx.onerror=()=>reject(tx.error);
+ });
+}
+
+async function removeRecording(rank){
+ const db=await openDB();
+ return new Promise(resolve=>{
+   const tx=db.transaction(STORE,"readwrite");
+   tx.objectStore(STORE).delete(String(rank));
+   tx.oncomplete=resolve;
+ });
+}
+
+function category(source){
+ const s=(source||"").toLowerCase();
+ if(s.startsWith("bg ")) return "Bhagavad-gita";
+ if(s.startsWith("sb ")) return "Srimad-Bhagavatam";
+ if(s.startsWith("cc ")) return "Caitanya-caritamrta";
+ if(s.startsWith("bsm ")) return "Brahma-samhita";
+ return "Otros";
+}
+
+function current(){
+ return verses.find(v=>v.rank===currentRank);
+}
+
+function applyFilter(){
+ const q=$("search").value.toLowerCase().trim();
+ const f=$("filter").value;
+
+ filtered=verses.filter(v=>{
+   const matchesSource=f==="Todos" || category(v.source)===f;
+   const matchesSearch=!q ||
+     (v.opening||"").toLowerCase().includes(q) ||
+     (v.source||"").toLowerCase().includes(q) ||
+     (v.verse||"").toLowerCase().includes(q) ||
+     String(v.rank)===q;
+   return matchesSource && matchesSearch;
+ });
+
+ $("count").textContent=filtered.length+" versos";
+ renderList();
+
+ if(filtered.length && !filtered.some(v=>v.rank===currentRank))
+   selectVerse(filtered[0].rank);
+}
+
+function renderList(){
+ const list=$("list");
+ list.innerHTML="";
+
+ filtered.forEach(v=>{
+   const d=document.createElement("div");
+   d.className="verse-item"+(v.rank===currentRank?" active":"");
+   d.textContent=
+     "#"+String(v.rank).padStart(3,"0")+"  "+
+     (v.source||"")+" — "+(v.opening||"");
+   d.onclick=()=>selectVerse(v.rank);
+   d.dataset.rank=v.rank;
+   list.appendChild(d);
+ });
+}
+
+async function selectVerse(rank){
+ stopEverything();
+
+ currentRank=rank;
+ const v=current();
+ if(!v)return;
+
+ localStorage.setItem("last_rank",rank);
+
+ $("rank").textContent="# "+v.rank+" de 180";
+ $("source").textContent=v.source||"";
+ $("verse").textContent=v.verse||"Texto pendiente de verificar.";
+ $("translation").textContent=v.translation||"Texto pendiente de verificar.";
+ $("status").value=localStorage.getItem("status_"+rank)||"Nuevo";
+
+ renderList();
+
+ const active=document.querySelector(".verse-item.active");
+ if(active) active.scrollIntoView({block:"nearest"});
+
+ await refreshAudioStatus();
+}
+
+async function getAudioSource(){
+ const personal=await getRecording(currentRank);
+
+ if(personal)
+   return {url:URL.createObjectURL(personal),kind:"personal"};
+
+ const file=audioMap[String(currentRank)];
+ if(file)
+   return {url:"./builtin_audio/"+encodeURIComponent(file),kind:"incluido"};
+
+ return null;
+}
+
+async function refreshAudioStatus(){
+ const personal=await getRecording(currentRank);
+
+ if(personal){
+   $("audioStatus").textContent="✓ Audio personal guardado";
+   return;
+ }
+
+ if(audioMap[String(currentRank)]){
+   $("audioStatus").textContent="✓ Audio humano incluido";
+   return;
+ }
+
+ $("audioStatus").textContent=
+   "⚠ Sin audio — puedes grabarlo con tu voz";
+}
+
+async function loadAudio(){
+ stopAudio();
+
+ const src=await getAudioSource();
+ if(!src)return false;
+
+ audio.src=src.url;
+ audio.playbackRate=parseFloat($("speed").value);
+ audio.load();
+ return true;
+}
+
+async function playCurrent(){
+ memorizing=false;
+
+ if(!await loadAudio()){
+   alert("Este verso todavía no tiene audio. Usa “Grabar mi voz”.");
+   return;
+ }
+
+ try{
+   await audio.play();
+ }catch(e){
+   alert("No se pudo reproducir el audio: "+e.message);
+ }
+}
+
+function stopAudio(){
+ audio.pause();
+ audio.currentTime=0;
+}
+
+function stopEverything(){
+ memorizing=false;
+ stopAudio();
+}
+
+async function startRecording(){
+ if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+   alert("Este navegador no permite grabación de micrófono.");
+   return;
+ }
+
+ try{
+   recordingStream=await navigator.mediaDevices.getUserMedia({audio:true});
+   recordingChunks=[];
+
+   let options={};
+   if(MediaRecorder.isTypeSupported("audio/webm;codecs=opus"))
+     options={mimeType:"audio/webm;codecs=opus"};
+
+   mediaRecorder=new MediaRecorder(recordingStream,options);
+
+   mediaRecorder.ondataavailable=e=>{
+     if(e.data.size)recordingChunks.push(e.data);
+   };
+
+   mediaRecorder.onstop=async()=>{
+     const blob=new Blob(recordingChunks,{
+       type:mediaRecorder.mimeType||"audio/webm"
+     });
+
+     await saveRecording(currentRank,blob);
+
+     if(recordingStream)
+       recordingStream.getTracks().forEach(t=>t.stop());
+
+     recordingStream=null;
+     mediaRecorder=null;
+     $("record").textContent="🎙 Grabar mi voz";
+     await refreshAudioStatus();
+   };
+
+   mediaRecorder.start();
+   $("record").textContent="⏹ Terminar y guardar";
+
+ }catch(e){
+   alert("No se pudo usar el micrófono: "+e.message);
+ }
+}
+
+function toggleRecording(){
+ if(mediaRecorder && mediaRecorder.state==="recording"){
+   mediaRecorder.stop();
+   return;
+ }
+ stopEverything();
+ startRecording();
+}
+
+async function deleteRecording(){
+ const personal=await getRecording(currentRank);
+
+ if(!personal){
+   alert("Este verso no tiene una grabación personal.");
+   return;
+ }
+
+ if(confirm("¿Borrar la grabación de este verso?")){
+   await removeRecording(currentRank);
+   await refreshAudioStatus();
+ }
+}
+
+async function memorize(){
+ const src=await getAudioSource();
+
+ if(!src){
+   alert("Graba primero este verso.");
+   return;
+ }
+
+ stopEverything();
+
+ memorizeRemaining=Math.max(1,parseInt($("repeat").value));
+ memorizePause=Math.max(0,parseFloat($("pause").value))*1000;
+ memorizing=true;
+
+ audio.src=src.url;
+ audio.playbackRate=parseFloat($("speed").value);
+ audio.load();
+
+ playMemorizeIteration();
+}
+
+async function playMemorizeIteration(){
+ if(!memorizing)return;
+
+ try{
+   audio.currentTime=0;
+   await audio.play();
+ }catch(e){
+   memorizing=false;
+   alert("No se pudo reproducir el audio: "+e.message);
+ }
+}
+
+audio.addEventListener("ended",()=>{
+ if(!memorizing)return;
+
+ memorizeRemaining--;
+
+ if(memorizeRemaining<=0){
+   memorizing=false;
+   return;
+ }
+
+ setTimeout(()=>{
+   if(memorizing)playMemorizeIteration();
+ },memorizePause);
+});
+
+$("play").onclick=playCurrent;
+$("stop").onclick=stopEverything;
+$("record").onclick=toggleRecording;
+$("deleteRecording").onclick=deleteRecording;
+$("memorize").onclick=memorize;
+
+$("speed").onchange=()=>{
+ audio.playbackRate=parseFloat($("speed").value);
+};
+
+$("status").onchange=()=>{
+ localStorage.setItem("status_"+currentRank,$("status").value);
+};
+
+$("prev").onclick=()=>{
+ const i=filtered.findIndex(v=>v.rank===currentRank);
+ if(i>0)selectVerse(filtered[i-1].rank);
+};
+
+$("next").onclick=()=>{
+ const i=filtered.findIndex(v=>v.rank===currentRank);
+ if(i>=0 && i<filtered.length-1)
+   selectVerse(filtered[i+1].rank);
+};
+
+$("search").oninput=applyFilter;
+$("filter").onchange=applyFilter;
+
+Promise.all([
+ fetch("./verses.json").then(r=>{
+   if(!r.ok)throw new Error("No se pudo cargar verses.json");
+   return r.json();
+ }),
+ fetch("./audio-map.json").then(r=>{
+   if(!r.ok)throw new Error("No se pudo cargar audio-map.json");
+   return r.json();
+ })
+]).then(([v,a])=>{
+ verses=v;
+ audioMap=a;
+ filtered=verses.slice();
+
+ const saved=parseInt(localStorage.getItem("last_rank")||"1");
+ currentRank=verses.some(x=>x.rank===saved)?saved:verses[0].rank;
+
+ applyFilter();
+ selectVerse(currentRank);
+}).catch(e=>{
+ document.body.innerHTML="<h2>Error cargando la aplicación</h2><pre>"+
+ e.message+"</pre>";
+});
+
+if("serviceWorker" in navigator){
+ window.addEventListener("load",()=>{
+   navigator.serviceWorker.register("./service-worker.js");
+ });
+}
+</script>
+
+</body>
+</html>

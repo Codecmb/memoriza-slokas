@@ -1,0 +1,10 @@
+{
+  "name":"Memoriza Slokas",
+  "short_name":"Slokas",
+  "description":"Aplicación personal para memorizar slokas",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#f4f4f4",
+  "theme_color":"#f2f2f2"
+}

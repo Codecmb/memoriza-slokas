@@ -116,11 +116,16 @@ button:active{background:#ddd}
 <body>
 
 <div class="top">
-<label>Buscar:</label>
+<select id="language">
+<option value="en">English</option>
+<option value="es">Español</option>
+</select>
+<label id="searchLabel">Buscar:</label>
 <input id="search" placeholder="Buscar">
-<label>Fuente:</label>
+<label id="sourceLabel">Fuente:</label>
 <select id="filter">
-<option>Todos</option>
+<option value="all">Todos</option>
+<option value="missing-es">🔴 Falta español</option>
 <option>Bhagavad-gita</option>
 <option>Srimad-Bhagavatam</option>
 <option>Caitanya-caritamrta</option>
@@ -138,7 +143,8 @@ button:active{background:#ddd}
 
 <div class="heading">
 <span id="rank"></span>
-<span class="source" id="source"></span>
+<a class="source" id="source" href="#" target="_blank"
+rel="noopener noreferrer"></a>
 </div>
 
 <hr class="separator">
@@ -146,8 +152,67 @@ button:active{background:#ddd}
 <div class="label">ŚLOKA</div>
 <div class="textbox" id="verse"></div>
 
-<div class="label">TRADUCCIÓN</div>
+<div class="label" id="wordForWordLabel">PALABRA POR PALABRA</div>
+<div class="textbox" id="wordForWord"></div>
+
+<div class="label" id="translationLabel">TRADUCCIÓN</div>
 <div class="textbox" id="translation"></div>
+
+<div class="row" style="margin-top:12px">
+<button id="editVerse">✏️ Editar</button>
+<button id="restoreVerse" style="display:none">↩ Restaurar original</button>
+<button id="exportEdits">💾 Backup</button>
+
+<button id="importEdits">♻️ Restaurar</button>
+<input type="file" id="importEditsFile" accept=".json,application/json" style="display:none">
+</div>
+
+<div id="verseEditor" style="display:none; margin-top:14px">
+  <label>Referencia</label>
+  <input id="editSource" style="width:100%; box-sizing:border-box; margin-bottom:10px">
+
+  <label>Opening / Inicio</label>
+  <input id="editOpening" style="width:100%; box-sizing:border-box; margin-bottom:10px">
+
+  <label>Enlace original</label>
+  <input id="editOriginalUrl" type="url"
+    placeholder="Automático si se deja vacío"
+    style="width:100%; box-sizing:border-box; margin-bottom:10px">
+
+  <label>ŚLOKA</label>
+  <textarea id="editVerseText" rows="7"
+    style="width:100%; box-sizing:border-box; margin-bottom:10px"></textarea>
+
+  <label>Word-for-word — English</label>
+  <textarea id="editWordForWordEnglish" rows="6"
+    style="width:100%; box-sizing:border-box; margin-bottom:10px"></textarea>
+
+  <label>Palabra por palabra — Español</label>
+  <textarea id="editWordForWordSpanish" rows="6"
+    style="width:100%; box-sizing:border-box; margin-bottom:10px"></textarea>
+
+  <label>English</label>
+  <textarea id="editEnglish" rows="6"
+    style="width:100%; box-sizing:border-box; margin-bottom:10px"></textarea>
+
+  <label>Español</label>
+  <textarea id="editSpanish" rows="6"
+    style="width:100%; box-sizing:border-box; margin-bottom:10px"></textarea>
+
+  <div class="row" style="margin-bottom:10px">
+    <button id="openSpanishVedabase">
+      🌐 Abrir en Vedabase Español
+    </button>
+  </div>
+
+  <div class="row">
+    <button id="saveVerseEdit">💾 Guardar</button>
+    <button id="saveNextSpanish">
+      💾 Guardar y siguiente sin español
+    </button>
+    <button id="cancelVerseEdit">Cancelar</button>
+  </div>
+</div>
 
 <div class="audio-status" id="audioStatus"></div>
 
@@ -159,7 +224,7 @@ button:active{background:#ddd}
 </div>
 
 <div class="group">
-<span class="legend">Mi grabación</span>
+<span class="legend" id="recordingLabel">Mi grabación</span>
 <div class="group-content rec-row">
 <button id="record">🎙 Grabar mi voz</button>
 <button id="deleteRecording">🗑 Borrar grabación</button>
@@ -167,10 +232,10 @@ button:active{background:#ddd}
 </div>
 
 <div class="group">
-<span class="legend">Memorización</span>
+<span class="legend" id="memorizationLabel">Memorización</span>
 <div class="group-content mem-row">
 
-<label>Repetir</label>
+<label id="repeatLabel">Repetir</label>
 <select id="repeat">
 <option>1</option>
 <option>3</option>
@@ -178,10 +243,10 @@ button:active{background:#ddd}
 <option>10</option>
 </select>
 
-<label>Pausa</label>
+<label id="pauseLabel">Pausa</label>
 <input id="pause" type="number" value="1.5" min="0" max="20" step=".5">
 
-<label>Velocidad</label>
+<label id="speedLabel">Velocidad</label>
 <select id="speed">
 <option value=".70">0.70</option>
 <option value=".85" selected>0.85</option>
@@ -190,11 +255,11 @@ button:active{background:#ddd}
 
 <button id="memorize">▶ Memorizar</button>
 
-<label>Estado</label>
+<label id="statusLabel">Estado</label>
 <select id="status">
-<option>Nuevo</option>
-<option>Aprendiendo</option>
-<option>Memorizado</option>
+<option value="new">Nuevo</option>
+<option value="learning">Aprendiendo</option>
+<option value="memorized">Memorizado</option>
 </select>
 
 </div>
@@ -224,13 +289,137 @@ const $=x=>document.getElementById(x);
 
 const DBNAME="MemorizaSlokasDB";
 const STORE="recordings";
+const EDITSTORE="verseEdits";
+
+const translations={
+ en:{
+   search:"Search:",
+   searchPlaceholder:"Search",
+   source:"Source:",
+   all:"All",
+   other:"Other",
+   wordForWord:"WORD-FOR-WORD",
+   noWordForWord:"No word-for-word gloss is provided for this verse in the source.",
+   translation:"TRANSLATION",
+   previous:"⏮ Previous",
+   play:"▶ Play",
+   stop:"■ Stop",
+   next:"Next ⏭",
+   myRecording:"My recording",
+   recordVoice:"🎙 Record my voice",
+   deleteRecording:"🗑 Delete recording",
+   memorization:"Memorization",
+   repeat:"Repeat",
+   pause:"Pause",
+   speed:"Speed",
+   memorize:"▶ Memorize",
+   status:"Status",
+   newStatus:"New",
+   learningStatus:"Learning",
+   memorizedStatus:"Memorized",
+   verses:"verses",
+   pendingText:"Text pending verification.",
+   personalAudio:"✓ Personal audio saved",
+   includedAudio:"✓ Human audio included",
+   noAudio:"⚠ No audio — you can record it with your voice",
+   noAudioPlay:"This verse does not have audio yet. Use “Record my voice”.",
+   playError:"Could not play audio: ",
+   micUnsupported:"This browser does not support microphone recording.",
+   finishRecording:"⏹ Finish and save",
+   micError:"Could not use the microphone: ",
+   noPersonalRecording:"This verse does not have a personal recording.",
+   confirmDelete:"Delete the recording for this verse?",
+   recordFirst:"Record this verse first."
+ },
+ es:{
+   search:"Buscar:",
+   searchPlaceholder:"Buscar",
+   source:"Fuente:",
+   all:"Todos",
+   other:"Otros",
+   wordForWord:"PALABRA POR PALABRA",
+   noWordForWord:"La fuente no proporciona glosario palabra por palabra para este verso.",
+   translation:"TRADUCCIÓN",
+   previous:"⏮ Anterior",
+   play:"▶ Reproducir",
+   stop:"■ Parar",
+   next:"Siguiente ⏭",
+   myRecording:"Mi grabación",
+   recordVoice:"🎙 Grabar mi voz",
+   deleteRecording:"🗑 Borrar grabación",
+   memorization:"Memorización",
+   repeat:"Repetir",
+   pause:"Pausa",
+   speed:"Velocidad",
+   memorize:"▶ Memorizar",
+   status:"Estado",
+   newStatus:"Nuevo",
+   learningStatus:"Aprendiendo",
+   memorizedStatus:"Memorizado",
+   verses:"versos",
+   pendingText:"Texto pendiente de verificar.",
+   personalAudio:"✓ Audio personal guardado",
+   includedAudio:"✓ Audio humano incluido",
+   noAudio:"⚠ Sin audio — puedes grabarlo con tu voz",
+   noAudioPlay:"Este verso todavía no tiene audio. Usa “Grabar mi voz”.",
+   playError:"No se pudo reproducir el audio: ",
+   micUnsupported:"Este navegador no permite grabación de micrófono.",
+   finishRecording:"⏹ Terminar y guardar",
+   micError:"No se pudo usar el micrófono: ",
+   noPersonalRecording:"Este verso no tiene una grabación personal.",
+   confirmDelete:"¿Borrar la grabación de este verso?",
+   recordFirst:"Graba primero este verso."
+ }
+};
+
+let currentLanguage=localStorage.getItem("language")||"en";
+
+function setLanguage(lang){
+ currentLanguage=lang==="es"?"es":"en";
+ localStorage.setItem("language",currentLanguage);
+
+ const t=translations[currentLanguage];
+
+ $("language").value=currentLanguage;
+ $("searchLabel").textContent=t.search;
+ $("search").placeholder=t.searchPlaceholder;
+ $("sourceLabel").textContent=t.source;
+
+ const filterOptions=$("filter").options;
+ filterOptions[0].textContent=t.all;
+ filterOptions[5].textContent=t.other;
+
+ $("wordForWordLabel").textContent=t.wordForWord;
+ $("translationLabel").textContent=t.translation;
+ $("prev").textContent=t.previous;
+ $("play").textContent=t.play;
+ $("stop").textContent=t.stop;
+ $("next").textContent=t.next;
+ $("recordingLabel").textContent=t.myRecording;
+ $("record").textContent=t.recordVoice;
+ $("deleteRecording").textContent=t.deleteRecording;
+ $("memorizationLabel").textContent=t.memorization;
+ $("repeatLabel").textContent=t.repeat;
+ $("pauseLabel").textContent=t.pause;
+ $("speedLabel").textContent=t.speed;
+ $("memorize").textContent=t.memorize;
+ $("statusLabel").textContent=t.status;
+
+ const statusOptions=$("status").options;
+ statusOptions[0].textContent=t.newStatus;
+ statusOptions[1].textContent=t.learningStatus;
+ statusOptions[2].textContent=t.memorizedStatus;
+}
+
 
 function openDB(){
  return new Promise((resolve,reject)=>{
-   const req=indexedDB.open(DBNAME,1);
+   const req=indexedDB.open(DBNAME,2);
    req.onupgradeneeded=()=>{
      if(!req.result.objectStoreNames.contains(STORE))
        req.result.createObjectStore(STORE);
+     if(!req.result.objectStoreNames.contains(EDITSTORE))
+       req.result.createObjectStore(EDITSTORE);
    };
    req.onsuccess=()=>resolve(req.result);
    req.onerror=()=>reject(req.error);
@@ -266,6 +455,104 @@ async function removeRecording(rank){
  });
 }
 
+async function getVerseEdit(rank){
+ const db=await openDB();
+ return new Promise(resolve=>{
+   const tx=db.transaction(EDITSTORE,"readonly");
+   const req=tx.objectStore(EDITSTORE).get(String(rank));
+   req.onsuccess=()=>resolve(req.result||null);
+   req.onerror=()=>resolve(null);
+ });
+}
+
+async function saveVerseEdit(rank,data){
+ const db=await openDB();
+ return new Promise((resolve,reject)=>{
+   const tx=db.transaction(EDITSTORE,"readwrite");
+   tx.objectStore(EDITSTORE).put(data,String(rank));
+   tx.oncomplete=()=>resolve();
+   tx.onerror=()=>reject(tx.error);
+ });
+}
+
+async function removeVerseEdit(rank){
+ const db=await openDB();
+ return new Promise((resolve,reject)=>{
+   const tx=db.transaction(EDITSTORE,"readwrite");
+   tx.objectStore(EDITSTORE).delete(String(rank));
+   tx.oncomplete=()=>resolve();
+   tx.onerror=()=>reject(tx.error);
+ });
+}
+
+async function getAllVerseEdits(){
+ const db=await openDB();
+ return new Promise(resolve=>{
+   const tx=db.transaction(EDITSTORE,"readonly");
+   const store=tx.objectStore(EDITSTORE);
+   const result={};
+   const req=store.openCursor();
+
+   req.onsuccess=e=>{
+     const cursor=e.target.result;
+     if(cursor){
+       result[cursor.key]=cursor.value;
+       cursor.continue();
+     }else{
+       resolve(result);
+     }
+   };
+
+   req.onerror=()=>resolve({});
+ });
+}
+
+async function importVerseEdits(data){
+ const db=await openDB();
+
+ return new Promise((resolve,reject)=>{
+   const tx=db.transaction(EDITSTORE,"readwrite");
+   const store=tx.objectStore(EDITSTORE);
+
+   for(const [rank,value] of Object.entries(data)){
+     if(value && typeof value==="object")
+       store.put(value,String(rank));
+   }
+
+   tx.oncomplete=()=>resolve();
+   tx.onerror=()=>reject(tx.error);
+ });
+}
+
+function automaticVerseUrl(source){
+ const s=(source||"").trim();
+ const lang=currentLanguage==="es" ? "es" : "en";
+
+ // Bhagavad-gita: Bg 2.13
+ let m=s.match(/^Bg\s+(\d+)\.(\d+)$/i);
+ if(m)
+   return "https://vedabase.io/"+lang+"/library/bg/"+m[1]+"/"+m[2]+"/";
+
+ // Srimad-Bhagavatam: SB 1.2.6
+ m=s.match(/^SB\s+(\d+)\.(\d+)\.(\d+)$/i);
+ if(m)
+   return "https://vedabase.io/"+lang+"/library/sb/"+m[1]+"/"+m[2]+"/"+m[3]+"/";
+
+ // Brahma-samhita: Bs 5.1 / BSM 5.1
+ m=s.match(/^(?:Bs|BSM)\s+(\d+)\.(\d+)$/i);
+ if(m)
+   return "https://vedabase.io/"+lang+"/library/bs/"+m[1]+"/"+m[2]+"/";
+
+ // Caitanya-caritamrta:
+ // CC Adi 1.1 / CC Madhya 8.128 / CC Antya 20.12
+ m=s.match(/^CC\s+(Adi|Madhya|Antya)\s+(\d+)\.(\d+)$/i);
+ if(m)
+   return "https://vedabase.io/"+lang+"/library/cc/"+
+     m[1].toLowerCase()+"/"+m[2]+"/"+m[3]+"/";
+
+ return "";
+}
+
 function category(source){
  const s=(source||"").toLowerCase();
  if(s.startsWith("bg ")) return "Bhagavad-gita";
@@ -279,37 +566,67 @@ function current(){
  return verses.find(v=>v.rank===currentRank);
 }
 
-function applyFilter(){
+async function applyFilter(){
  const q=$("search").value.toLowerCase().trim();
  const f=$("filter").value;
 
- filtered=verses.filter(v=>{
-   const matchesSource=f==="Todos" || category(v.source)===f;
-   const matchesSearch=!q ||
-     (v.opening||"").toLowerCase().includes(q) ||
-     (v.source||"").toLowerCase().includes(q) ||
-     (v.verse||"").toLowerCase().includes(q) ||
-     String(v.rank)===q;
+ const edits=await getAllVerseEdits();
+
+ filtered=verses.filter(original=>{
+   const edit=edits[String(original.rank)];
+   const v=edit ? {...original,...edit} : original;
+
+   const matchesSource=
+     f==="missing-es"
+       ? !(v.translation_es||"").trim()
+       : (f==="all" || category(v.source)===f);
+
+   const searchable=[
+     v.rank,
+     v.source,
+     v.opening,
+     v.verse,
+     v.translation,
+     v.translation_es
+   ]
+   .map(x=>String(x||"").toLowerCase())
+   .join(" ");
+
+   const matchesSearch=!q || searchable.includes(q);
+
    return matchesSource && matchesSearch;
  });
 
- $("count").textContent=filtered.length+" versos";
- renderList();
+ $("count").textContent=
+   filtered.length+" "+translations[currentLanguage].verses;
+
+ await renderList();
 
  if(filtered.length && !filtered.some(v=>v.rank===currentRank))
-   selectVerse(filtered[0].rank);
+   await selectVerse(filtered[0].rank);
 }
 
-function renderList(){
+async function renderList(){
  const list=$("list");
  list.innerHTML="";
 
- filtered.forEach(v=>{
+ const edits=await getAllVerseEdits();
+
+ filtered.forEach(original=>{
+   const edit=edits[String(original.rank)];
+   const v=edit ? {...original,...edit} : original;
+
    const d=document.createElement("div");
    d.className="verse-item"+(v.rank===currentRank?" active":"");
+
+   const spanishDone=!!(v.translation_es||"").trim();
+
    d.textContent=
+     (!spanishDone ? "🔴 " : "")+
+     (edit ? "✏️ " : "")+
      "#"+String(v.rank).padStart(3,"0")+"  "+
      (v.source||"")+" — "+(v.opening||"");
+
    d.onclick=()=>selectVerse(v.rank);
    d.dataset.rank=v.rank;
    list.appendChild(d);
@@ -317,19 +634,61 @@ function renderList(){
 }
 
 async function selectVerse(rank){
+ if(currentRank!==null && rank!==currentRank && editorHasUnsavedChanges()){
+   const msg=currentLanguage==="es"
+     ? "Hay cambios sin guardar. ¿Cambiar de verso y descartarlos?"
+     : "There are unsaved changes. Change verse and discard them?";
+
+   if(!confirm(msg))return;
+ }
+
  stopEverything();
 
  currentRank=rank;
- const v=current();
- if(!v)return;
+ const original=current();
+ if(!original)return;
+
+ const edit=await getVerseEdit(rank);
+ const v=edit ? {...original,...edit} : original;
 
  localStorage.setItem("last_rank",rank);
 
- $("rank").textContent="# "+v.rank+" de 180";
+ $("rank").textContent="# "+v.rank+
+   (currentLanguage==="es"?" de ":" of ")+verses.length;
  $("source").textContent=v.source||"";
- $("verse").textContent=v.verse||"Texto pendiente de verificar.";
- $("translation").textContent=v.translation||"Texto pendiente de verificar.";
- $("status").value=localStorage.getItem("status_"+rank)||"Nuevo";
+
+ const originalUrl=v.original_url || automaticVerseUrl(v.source);
+
+ if(originalUrl){
+   $("source").href=originalUrl;
+   $("source").style.pointerEvents="";
+   $("source").style.textDecoration="underline";
+   $("source").title=currentLanguage==="es"
+     ? "Abrir verso original"
+     : "Open original verse";
+ }else{
+   $("source").removeAttribute("href");
+   $("source").style.pointerEvents="none";
+   $("source").style.textDecoration="none";
+   $("source").title="";
+ }
+
+ $("verse").textContent=v.verse||translations[currentLanguage].pendingText;
+ $("wordForWord").textContent=
+   (currentLanguage==="es" ? v.word_for_word_es : v.word_for_word)
+   || translations[currentLanguage].noWordForWord;
+ $("translation").textContent=
+   (currentLanguage==="es" ? v.translation_es : v.translation)
+   || translations[currentLanguage].pendingText;
+
+ $("restoreVerse").style.display=edit ? "" : "none";
+ $("verseEditor").style.display="none";
+ $("editVerse").style.display="";
+ let savedStatus=localStorage.getItem("status_"+rank)||"new";
+ if(savedStatus==="Nuevo") savedStatus="new";
+ if(savedStatus==="Aprendiendo") savedStatus="learning";
+ if(savedStatus==="Memorizado") savedStatus="memorized";
+ $("status").value=savedStatus;
 
  renderList();
 
@@ -356,17 +715,17 @@ async function refreshAudioStatus(){
  const personal=await getRecording(currentRank);
 
  if(personal){
-   $("audioStatus").textContent="✓ Audio personal guardado";
+   $("audioStatus").textContent=translations[currentLanguage].personalAudio;
    return;
  }
 
  if(audioMap[String(currentRank)]){
-   $("audioStatus").textContent="✓ Audio humano incluido";
+   $("audioStatus").textContent=translations[currentLanguage].includedAudio;
    return;
  }
 
  $("audioStatus").textContent=
-   "⚠ Sin audio — puedes grabarlo con tu voz";
+   translations[currentLanguage].noAudio;
 }
 
 async function loadAudio(){
@@ -385,14 +744,14 @@ async function playCurrent(){
  memorizing=false;
 
  if(!await loadAudio()){
-   alert("Este verso todavía no tiene audio. Usa “Grabar mi voz”.");
+   alert(translations[currentLanguage].noAudioPlay);
    return;
  }
 
  try{
    await audio.play();
  }catch(e){
-   alert("No se pudo reproducir el audio: "+e.message);
+   alert(translations[currentLanguage].playError+e.message);
  }
 }
 
@@ -408,7 +767,7 @@ function stopEverything(){
 
 async function startRecording(){
  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-   alert("Este navegador no permite grabación de micrófono.");
+   alert(translations[currentLanguage].micUnsupported);
    return;
  }
 
@@ -438,15 +797,15 @@ async function startRecording(){
 
      recordingStream=null;
      mediaRecorder=null;
-     $("record").textContent="🎙 Grabar mi voz";
+     $("record").textContent=translations[currentLanguage].recordVoice;
      await refreshAudioStatus();
    };
 
    mediaRecorder.start();
-   $("record").textContent="⏹ Terminar y guardar";
+   $("record").textContent=translations[currentLanguage].finishRecording;
 
  }catch(e){
-   alert("No se pudo usar el micrófono: "+e.message);
+   alert(translations[currentLanguage].micError+e.message);
  }
 }
 
@@ -463,11 +822,11 @@ async function deleteRecording(){
  const personal=await getRecording(currentRank);
 
  if(!personal){
-   alert("Este verso no tiene una grabación personal.");
+   alert(translations[currentLanguage].noPersonalRecording);
    return;
  }
 
- if(confirm("¿Borrar la grabación de este verso?")){
+ if(confirm(translations[currentLanguage].confirmDelete)){
    await removeRecording(currentRank);
    await refreshAudioStatus();
  }
@@ -477,7 +836,7 @@ async function memorize(){
  const src=await getAudioSource();
 
  if(!src){
-   alert("Graba primero este verso.");
+   alert(translations[currentLanguage].recordFirst);
    return;
  }
 
@@ -502,7 +861,7 @@ async function playMemorizeIteration(){
    await audio.play();
  }catch(e){
    memorizing=false;
-   alert("No se pudo reproducir el audio: "+e.message);
+   alert(translations[currentLanguage].playError+e.message);
  }
 }
 
@@ -531,6 +890,427 @@ $("speed").onchange=()=>{
  audio.playbackRate=parseFloat($("speed").value);
 };
 
+function editorIsOpen(){
+ return $("verseEditor").style.display!=="none";
+}
+
+let editorBaseline=null;
+
+function editorHasUnsavedChanges(){
+ if(!editorIsOpen() || !editorBaseline)return false;
+
+ return (
+   $("editSource").value.trim()!==(editorBaseline.source||"") ||
+   $("editOpening").value.trim()!==(editorBaseline.opening||"") ||
+   $("editOriginalUrl").value.trim()!==(editorBaseline.original_url||"") ||
+   $("editVerseText").value.trim()!==(editorBaseline.verse||"") ||
+   $("editWordForWordEnglish").value.trim()!==(editorBaseline.word_for_word||"") ||
+   $("editWordForWordSpanish").value.trim()!==(editorBaseline.word_for_word_es||"") ||
+   $("editEnglish").value.trim()!==(editorBaseline.translation||"") ||
+   $("editSpanish").value.trim()!==(editorBaseline.translation_es||"")
+ );
+}
+
+$("editVerse").onclick=async()=>{
+ const original=current();
+ if(!original)return;
+
+ const edit=await getVerseEdit(currentRank);
+ const v=edit ? {...original,...edit} : original;
+
+ editorBaseline={
+   source:v.source||"",
+   opening:v.opening||"",
+   original_url:v.original_url||"",
+   verse:v.verse||"",
+   word_for_word:v.word_for_word||"",
+   word_for_word_es:v.word_for_word_es||"",
+   translation:v.translation||"",
+   translation_es:v.translation_es||""
+ };
+
+ $("editSource").value=v.source||"";
+ $("editOpening").value=v.opening||"";
+ $("editOriginalUrl").value=v.original_url||"";
+ $("editVerseText").value=v.verse||"";
+ $("editWordForWordEnglish").value=v.word_for_word||"";
+ $("editWordForWordSpanish").value=v.word_for_word_es||"";
+ $("editEnglish").value=v.translation||"";
+ $("editSpanish").value=v.translation_es||"";
+
+ $("verseEditor").style.display="";
+ $("editVerse").style.display="none";
+
+ // Llevar al usuario directamente al campo del idioma actual.
+ const target=currentLanguage==="es"
+   ? $("editSpanish")
+   : $("editEnglish");
+
+ setTimeout(()=>{
+   target.scrollIntoView({
+     behavior:"smooth",
+     block:"center"
+   });
+   target.focus();
+ },50);
+};
+
+$("cancelVerseEdit").onclick=()=>{
+ if(editorHasUnsavedChanges()){
+   const msg=currentLanguage==="es"
+     ? "Hay cambios sin guardar. ¿Descartarlos?"
+     : "There are unsaved changes. Discard them?";
+
+   if(!confirm(msg))return;
+ }
+
+ $("verseEditor").style.display="none";
+ $("editVerse").style.display="";
+};
+
+function editorData(){
+ return {
+   source:$("editSource").value.trim(),
+   opening:$("editOpening").value.trim(),
+   original_url:$("editOriginalUrl").value.trim(),
+   verse:$("editVerseText").value.trim(),
+   word_for_word:$("editWordForWordEnglish").value.trim(),
+   word_for_word_es:$("editWordForWordSpanish").value.trim(),
+   translation:$("editEnglish").value.trim(),
+   translation_es:$("editSpanish").value.trim()
+ };
+}
+
+async function effectiveVerse(v){
+ const edit=await getVerseEdit(v.rank);
+ return edit ? {...v,...edit} : v;
+}
+
+async function findNextWithoutSpanish(afterRank){
+ const start=verses.findIndex(
+   v=>Number(v.rank)===Number(afterRank)
+ );
+
+ // Primero buscamos hacia adelante.
+ for(let i=start+1;i<verses.length;i++){
+   const v=await effectiveVerse(verses[i]);
+
+   if(!(v.translation_es||"").trim()){
+     return verses[i].rank;
+   }
+ }
+
+ // Si llegamos al final, continuamos desde el principio.
+ for(let i=0;i<=start;i++){
+   const v=await effectiveVerse(verses[i]);
+
+   if(!(v.translation_es||"").trim()){
+     return verses[i].rank;
+   }
+ }
+
+ return null;
+}
+
+$("openSpanishVedabase").onclick=()=>{
+ const v=current();
+ if(!v)return;
+
+ const url=automaticVerseUrl(v.source);
+
+ if(!url){
+   alert(
+     "No pude crear automáticamente el enlace de este verso."
+   );
+   return;
+ }
+
+ // automaticVerseUrl usa el idioma actual.
+ // Forzamos específicamente la versión española.
+ const spanishUrl=url.replace(
+   /vedabase\.io\/(?:en|es)\//,
+   "vedabase.io/es/"
+ );
+
+ window.open(
+   spanishUrl,
+   "_blank",
+   "noopener"
+ );
+};
+
+$("saveVerseEdit").onclick=async()=>{
+ if(currentRank===null)return;
+
+ await saveVerseEdit(
+   currentRank,
+   editorData()
+ );
+
+ await selectVerse(currentRank);
+};
+
+$("saveNextSpanish").onclick=async()=>{
+ if(currentRank===null)return;
+
+ const savedRank=currentRank;
+
+ await saveVerseEdit(
+   savedRank,
+   editorData()
+ );
+
+ const nextRank=
+   await findNextWithoutSpanish(savedRank);
+
+ if(nextRank===null){
+   await selectVerse(savedRank);
+
+   alert(
+     "¡Listo! No quedan versos sin traducción al español."
+   );
+
+   return;
+ }
+
+ await selectVerse(nextRank);
+
+ // Abrir inmediatamente el editor del siguiente pendiente.
+ $("editVerse").click();
+};
+
+$("restoreVerse").onclick=async()=>{
+ if(currentRank===null)return;
+
+ const msg=currentLanguage==="es"
+   ? "¿Restaurar este verso a su versión original?"
+   : "Restore this verse to its original version?";
+
+ if(!confirm(msg))return;
+
+ await removeVerseEdit(currentRank);
+ await selectVerse(currentRank);
+};
+
+
+
+$("exportEdits").onclick=async()=>{
+ const edits=await getAllVerseEdits();
+
+ const statuses={};
+
+ verses.forEach(v=>{
+   const status=localStorage.getItem("status_"+v.rank);
+   if(status) statuses[String(v.rank)]=status;
+ });
+
+ const backup={
+   app:"Memoriza Slokas",
+   type:"fullBackup",
+   version:1,
+   exported:new Date().toISOString(),
+
+   progress:{
+     last_rank:currentRank,
+     language:currentLanguage,
+     statuses
+   },
+
+   edits,
+
+   // Reservado para futuras funciones.
+   favorites:{},
+   notes:{}
+ };
+
+ const blob=new Blob(
+   [JSON.stringify(backup,null,2)],
+   {type:"application/json"}
+ );
+
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+
+ const date=new Date().toISOString().slice(0,10);
+
+ a.href=url;
+ a.download="memoriza-slokas-backup-"+date+".json";
+
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+
+ alert(currentLanguage==="es"
+   ? "Backup creado. Incluye progreso y correcciones. Las grabaciones de audio permanecen en este dispositivo."
+   : "Backup created. It includes progress and corrections. Audio recordings remain on this device.");
+};
+
+
+$("importEdits").onclick=()=>{
+ $("importEditsFile").value="";
+ $("importEditsFile").click();
+};
+
+
+$("importEditsFile").onchange=async e=>{
+ const file=e.target.files[0];
+ if(!file)return;
+
+ try{
+   const data=JSON.parse(await file.text());
+
+   /*
+      Aceptamos:
+      1. Nuevo backup completo.
+      2. Antiguos backups de correcciones.
+   */
+
+   const isFullBackup=
+     data &&
+     data.app==="Memoriza Slokas" &&
+     data.type==="fullBackup" &&
+     data.version===1;
+
+   const isOldEditsBackup=
+     data &&
+     data.app==="Memoriza Slokas" &&
+     data.type==="verseEdits" &&
+     data.edits &&
+     typeof data.edits==="object";
+
+   if(!isFullBackup && !isOldEditsBackup)
+     throw new Error("Formato no válido");
+
+
+   if(isOldEditsBackup){
+
+     const count=Object.keys(data.edits).length;
+
+     const msg=currentLanguage==="es"
+       ? "Este es un backup antiguo con "+count+
+         " correcciones. ¿Importarlas?"
+       : "This is an older backup containing "+count+
+         " corrections. Import them?";
+
+     if(!confirm(msg))return;
+
+     await importVerseEdits(data.edits);
+
+     await applyFilter();
+     await selectVerse(currentRank);
+
+     alert(currentLanguage==="es"
+       ? "Correcciones restauradas correctamente."
+       : "Corrections restored successfully.");
+
+     return;
+   }
+
+
+   const editCount=
+     data.edits && typeof data.edits==="object"
+       ? Object.keys(data.edits).length
+       : 0;
+
+   const statusCount=
+     data.progress &&
+     data.progress.statuses &&
+     typeof data.progress.statuses==="object"
+       ? Object.keys(data.progress.statuses).length
+       : 0;
+
+
+   const msg=currentLanguage==="es"
+     ? "Este backup contiene "+editCount+
+       " correcciones y "+statusCount+
+       " estados de estudio.\n\n¿Restaurar el backup?"
+     : "This backup contains "+editCount+
+       " corrections and "+statusCount+
+       " study statuses.\n\nRestore this backup?";
+
+   if(!confirm(msg))return;
+
+
+   // -----------------------------------------
+   // Restaurar correcciones
+   // -----------------------------------------
+
+   if(data.edits && typeof data.edits==="object")
+     await importVerseEdits(data.edits);
+
+
+   // -----------------------------------------
+   // Restaurar estados
+   // -----------------------------------------
+
+   if(
+     data.progress &&
+     data.progress.statuses &&
+     typeof data.progress.statuses==="object"
+   ){
+     for(const [rank,status] of
+         Object.entries(data.progress.statuses)){
+
+       if(
+         status==="new" ||
+         status==="learning" ||
+         status==="memorized"
+       ){
+         localStorage.setItem("status_"+rank,status);
+       }
+     }
+   }
+
+
+   // -----------------------------------------
+   // Restaurar idioma
+   // -----------------------------------------
+
+   if(
+     data.progress &&
+     (data.progress.language==="en" ||
+      data.progress.language==="es")
+   ){
+     currentLanguage=data.progress.language;
+     localStorage.setItem("language",currentLanguage);
+     setLanguage(currentLanguage);
+   }
+
+
+   // -----------------------------------------
+   // Restaurar último verso
+   // -----------------------------------------
+
+   if(data.progress){
+     const savedRank=parseInt(data.progress.last_rank);
+
+     if(verses.some(v=>v.rank===savedRank)){
+       currentRank=savedRank;
+       localStorage.setItem("last_rank",savedRank);
+     }
+   }
+
+
+   await applyFilter();
+   await selectVerse(currentRank);
+
+
+   alert(currentLanguage==="es"
+     ? "Backup restaurado correctamente. Las grabaciones de audio existentes no fueron modificadas."
+     : "Backup restored successfully. Existing audio recordings were not modified.");
+
+ }catch(err){
+
+   console.error(err);
+
+   alert(currentLanguage==="es"
+     ? "No se pudo restaurar el backup."
+     : "Could not restore the backup.");
+ }
+};
+
 $("status").onchange=()=>{
  localStorage.setItem("status_"+currentRank,$("status").value);
 };
@@ -548,6 +1328,13 @@ $("next").onclick=()=>{
 
 $("search").oninput=applyFilter;
 $("filter").onchange=applyFilter;
+
+$("language").onchange=()=>{
+ setLanguage($("language").value);
+ if(currentRank!==null) selectVerse(currentRank);
+};
+
+setLanguage(currentLanguage);
 
 Promise.all([
  fetch("./verses.json").then(r=>{

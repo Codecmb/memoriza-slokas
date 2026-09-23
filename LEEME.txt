@@ -1,0 +1,3 @@
+Memoriza Slokas reconstruida.
+Incluye verses.json, audio-map.json, interfaz bilingüe y sección Word-for-word.
+Los archivos MP3 no están incluidos en este ZIP; el mapa conserva sus nombres originales.

@@ -95,7 +95,6 @@ button{cursor:pointer}
 </head>
 
 <body>
-<body>
 <header class="appbar">
   <div class="brand">Memoriza Slokas</div>
   <div class="spacer"></div>
@@ -235,16 +234,15 @@ const EDITSTORE="verseEdits";
 
 const translations={
  en:{
-   
-    library:"Library",
-    libraryQuestion:"What would you like to study?",
-    librarySubtitle:"Select a book to view its verses.",
-    backLibrary:"← Library",
-    backList:"← List",
-    study:"Study",
-    backup:"Backup",
-    selectedVerses:"selected verses",
-search:"Search:",
+   libraryQuestion:"What would you like to study?",
+   librarySubtitle:"Select a book to view its verses.",
+   backLibrary:"← Library",
+   backList:"← List",
+   navLibrary:"Library",
+   navStudy:"Study",
+   navBackup:"Backup",
+   selectedVerses:"selected verses",
+   search:"Search:",
    searchPlaceholder:"Search",
    source:"Source:",
    all:"All",
@@ -283,16 +281,15 @@ search:"Search:",
    recordFirst:"Record this verse first."
  },
  es:{
-   
-    library:"Biblioteca",
-    libraryQuestion:"¿Qué quieres estudiar?",
-    librarySubtitle:"Selecciona un libro para ver sus versos.",
-    backLibrary:"← Biblioteca",
-    backList:"← Lista",
-    study:"Estudiar",
-    backup:"Backup",
-    selectedVerses:"versos seleccionados",
-search:"Buscar:",
+   libraryQuestion:"¿Qué quieres estudiar?",
+   librarySubtitle:"Selecciona un libro para ver sus versos.",
+   backLibrary:"← Biblioteca",
+   backList:"← Lista",
+   navLibrary:"Biblioteca",
+   navStudy:"Estudiar",
+   navBackup:"Backup",
+   selectedVerses:"versos seleccionados",
+   search:"Buscar:",
    searchPlaceholder:"Buscar",
    source:"Fuente:",
    all:"Todos",
@@ -341,21 +338,20 @@ function setLanguage(lang){
  const t=translations[currentLanguage];
 
  $("language").value=currentLanguage;
-  $("libraryTitle").textContent=t.libraryQuestion;
-  $("librarySubtitle").textContent=t.librarySubtitle;
-  $("backLibrary").textContent=t.backLibrary;
-  $("backBook").textContent=t.backList;
-  $("navLibraryLabel").textContent=t.library;
-  $("navStudyLabel").textContent=t.study;
-  $("navBackupLabel").textContent=t.backup;
-  document.documentElement.lang=currentLanguage;
- $("searchLabel").textContent=t.search;
+ document.documentElement.lang=currentLanguage;
+
+ $("libraryTitle").textContent=t.libraryQuestion;
+ $("librarySubtitle").textContent=t.librarySubtitle;
+ $("backLibrary").textContent=t.backLibrary;
+ $("backBook").textContent=t.backList;
+ $("navLibraryLabel").textContent=t.navLibrary;
+ $("navStudyLabel").textContent=t.navStudy;
+ $("navBackupLabel").textContent=t.navBackup;
+
  $("search").placeholder=t.searchPlaceholder;
- $("sourceLabel").textContent=t.source;
 
  const filterOptions=$("filter").options;
  filterOptions[0].textContent=t.all;
- filterOptions[5].textContent=t.other;
 
  $("wordForWordLabel").textContent=t.wordForWord;
  $("translationLabel").textContent=t.translation;
@@ -378,7 +374,6 @@ function setLanguage(lang){
  statusOptions[1].textContent=t.learningStatus;
  statusOptions[2].textContent=t.memorizedStatus;
 }
-
 
 function openDB(){
  return new Promise((resolve,reject)=>{

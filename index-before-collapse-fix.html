@@ -92,36 +92,6 @@ button{cursor:pointer}
 }
 @media(display-mode:standalone){body{padding-top:env(safe-area-inset-top)}}
 </style>
-
-<style id="collapseStyles">
-.collapsible-label{
-  cursor:pointer;
-  user-select:none;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-}
-
-.collapsible-label::after{
-  content:"▾";
-  font-size:18px;
-  margin-left:10px;
-  transition:transform .2s ease;
-}
-
-.collapsible-label.collapsed::after{
-  transform:rotate(-90deg);
-}
-
-.collapsible-content{
-  overflow:hidden;
-}
-
-.collapsible-content.collapsed{
-  display:none;
-}
-</style>
-
 </head>
 
 <body>
@@ -169,9 +139,9 @@ button{cursor:pointer}
   <div class="study-card">
     <div class="label">ŚLOKA</div>
     <div class="textbox" id="verse"></div>
-    <div class="label collapsible-label" id="wordForWordLabel">PALABRA POR PALABRA</div>
+    <div class="label" id="wordForWordLabel">PALABRA POR PALABRA</div>
     <div class="textbox" id="wordForWord"></div>
-    <div class="label collapsible-label" id="translationLabel">TRADUCCIÓN</div>
+    <div class="label" id="translationLabel">TRADUCCIÓN</div>
     <div class="textbox" id="translation"></div>
   </div>
 
@@ -1466,30 +1436,6 @@ if("serviceWorker" in navigator){
    navigator.serviceWorker.register("./service-worker.js");
  });
 }
-</script>
-
-
-<script id="collapseScript">
-document.addEventListener("DOMContentLoaded", () => {
-  const sections = [
-    ["wordForWordLabel", "wordForWord"],
-    ["translationLabel", "translation"]
-  ];
-
-  sections.forEach(([labelId, contentId]) => {
-    const label = document.getElementById(labelId);
-    const content = document.getElementById(contentId);
-
-    if (!label || !content) return;
-
-    content.classList.add("collapsible-content");
-
-    label.addEventListener("click", () => {
-      const isClosed = content.classList.toggle("collapsed");
-      label.classList.toggle("collapsed", isClosed);
-    });
-  });
-});
 </script>
 
 </body>

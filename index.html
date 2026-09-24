@@ -11,262 +11,206 @@
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 
 <style>
+:root{
+ --orange:#e77500; --orange-dark:#b85c00; --ink:#171717; --cream:#fbf7ef;
+ --paper:#fffdf8; --line:#ded6c8; --muted:#6d665d; --soft:#f1e8da;
+}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;font-family:Arial,sans-serif;background:#f4f4f4;color:#222}
-button,select,input{font:inherit}
-.top{
- display:flex;align-items:center;gap:8px;padding:10px;
- background:#eee;border-bottom:1px solid #bbb
-}
-.top input{width:280px;padding:7px}
-.top select{padding:7px}
-.count{margin-left:auto}
-
-.layout{
- display:grid;grid-template-columns:310px 1fr;
- height:calc(100vh - 58px);gap:0
-}
-.sidebar{
- border-right:1px solid #aaa;background:white;
- overflow:auto
-}
-.verse-item{
- padding:9px 10px;border-bottom:1px solid #ddd;
- cursor:pointer;font-size:14px
-}
-.verse-item.active{background:#dce8f7}
-.verse-item:hover{background:#eee}
-
-.content{
- overflow:auto;padding:15px 20px 30px
-}
-.heading{
- display:flex;justify-content:space-between;
- font-weight:bold;margin-bottom:10px
-}
-.source{font-size:20px}
-.separator{border:0;border-top:1px solid #bbb;margin:10px 0 14px}
-
-.label{font-weight:bold;margin:12px 0 5px}
-.textbox{
- background:white;border:1px solid #aaa;
- padding:14px;white-space:pre-wrap;overflow:auto
-}
-#verse{font-size:22px;line-height:1.55;min-height:160px}
-#translation{font-size:16px;line-height:1.5;min-height:110px}
-
-.audio-status{margin:15px 0 7px;font-size:14px}
-
-.row{
- display:grid;grid-template-columns:repeat(4,1fr);
- gap:5px;margin-bottom:8px
-}
-button{
- padding:10px 8px;border:1px solid #aaa;
- background:#fafafa;border-radius:4px;cursor:pointer
-}
-button:active{background:#ddd}
-
-.group{
- border:1px solid #aaa;border-radius:5px;
- padding:10px;margin-top:9px
-}
-.legend{
- font-size:13px;font-weight:bold;
- background:#f4f4f4;padding:0 5px;
- position:relative;top:-19px;display:inline-block
-}
-.group-content{margin-top:-10px}
-
-.rec-row{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-
-.mem-row{
- display:flex;align-items:center;gap:7px;
- flex-wrap:wrap
-}
-.mem-row select,.mem-row input{padding:7px}
-#pause{width:65px}
-
-.hidden{display:none!important}
-
-@media(max-width:750px){
- .top{flex-wrap:wrap}
- .top label{display:none}
- .top input{width:calc(100% - 105px);flex:1}
- .count{margin-left:0;font-size:13px}
- .layout{display:block;height:auto}
- .sidebar{
-   height:220px;border-right:0;
-   border-bottom:2px solid #888
- }
- .content{padding:14px}
- .heading{font-size:14px}
- .source{font-size:17px}
+html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;background:var(--cream);color:var(--ink)}
+button,select,input,textarea{font:inherit}
+button{cursor:pointer}
+.appbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:12px 18px;background:#111;color:white;border-bottom:4px solid var(--orange)}
+.brand{font-family:Georgia,serif;font-weight:700;font-size:20px;letter-spacing:.2px;white-space:nowrap}
+.appbar .spacer{flex:1}
+.appbar select,.appbar button{background:#222;color:white;border:1px solid #555;border-radius:7px;padding:8px 10px}
+.page{display:none;max-width:1100px;margin:auto;padding:28px 20px 90px}
+.page.active{display:block}
+.hero{padding:24px 0 16px}
+.hero h1{font:700 36px/1.05 Georgia,serif;margin:0 0 8px}
+.hero p{color:var(--muted);font-size:17px;margin:0}
+.book-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:22px}
+.book-card{background:var(--paper);border:1px solid var(--line);border-top:5px solid var(--orange);border-radius:10px;padding:20px;text-align:left;box-shadow:0 3px 10px #0000000b}
+.book-card h2{font:700 23px Georgia,serif;margin:0 0 8px}
+.book-card .book-count{color:var(--muted)}
+.section-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.backbtn{border:0;background:transparent;font-weight:700;padding:8px 0}
+.section-head h1{font:700 30px Georgia,serif;margin:0}
+.list-tools{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.list-tools input,.list-tools select{padding:10px;border:1px solid var(--line);border-radius:7px;background:white}
+.list-tools input{flex:1;min-width:220px}
+.sidebar{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:white}
+.verse-item{padding:13px 15px;border-bottom:1px solid #eee;cursor:pointer;font-size:15px}
+.verse-item:last-child{border-bottom:0}
+.verse-item:hover{background:#fff7ed}
+.verse-item.active{background:#ffedd5}
 .verse-item.needs-fix{background:#fff3b0;border-left:5px solid #d39e00}
 .verse-item.fixed-local{background:#dbeafe;border-left:5px solid #2563eb}
-.verse-item.active.needs-fix,.verse-item.active.fixed-local{outline:2px solid currentColor}
+.count{color:var(--muted);font-size:14px}
+.player-shell{max-width:850px;margin:auto}
+.player-top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.player-top .source{font:700 24px Georgia,serif;color:var(--ink)}
+.player-top .counter{margin-left:auto;color:var(--muted)}
+.study-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:0 4px 16px #0000000b}
+.label{font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--orange-dark);margin:22px 0 7px}
+.label:first-child{margin-top:0}
+.textbox{white-space:pre-wrap;line-height:1.65}
+#verse{font:22px/1.65 Georgia,serif}
+#wordForWord,#translation{font-size:16px}
+.player-controls{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:9px;margin:16px 0}
+.player-controls button{padding:13px;border:1px solid #222;border-radius:8px;background:white;font-weight:700}
+#play{background:var(--orange);color:#111;border-color:var(--orange-dark)}
+.secondary-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0}
+.secondary-controls button{padding:10px 8px;border:1px solid var(--line);background:white;border-radius:7px}
 #reviewStateBtn.needs-fix{background:#fff3b0}
 #reviewStateBtn.fixed-local{background:#dbeafe}
- #verse{font-size:19px;min-height:130px}
- .row{grid-template-columns:1fr 1fr}
+.group{border:1px solid var(--line);border-radius:9px;padding:14px;margin-top:12px;background:white}
+.legend{font-size:13px;font-weight:bold;color:var(--muted)}
+.group-content{margin-top:10px}
+.rec-row{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.rec-row button{padding:10px;border:1px solid var(--line);background:white;border-radius:7px}
+.mem-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mem-row select,.mem-row input{padding:8px;border:1px solid var(--line);border-radius:6px}
+.audio-status{margin:12px 0;color:var(--muted);font-size:14px}
+.editor-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:14px}
+.editor-actions button{padding:10px;border:1px solid var(--line);background:white;border-radius:7px}
+#verseEditor{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:14px}
+#verseEditor input,#verseEditor textarea{border:1px solid var(--line);border-radius:6px;padding:8px}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#111;border-top:3px solid var(--orange);display:flex;justify-content:center}
+.bottomnav button{width:min(33.33%,220px);border:0;background:#111;color:white;padding:12px 8px}
+.bottomnav button.active{background:var(--orange);color:#111;font-weight:800}
+.hidden{display:none!important}
+@media(max-width:700px){
+ .appbar{padding:10px 12px}.brand{font-size:17px}
+ .page{padding:20px 12px 82px}.hero h1{font-size:30px}
+ .book-grid{grid-template-columns:1fr}
+ .study-card{padding:16px}
+ #verse{font-size:20px}
+ .secondary-controls,.editor-actions{grid-template-columns:1fr 1fr}
+ .player-top .source{font-size:20px}
+ .player-controls button{font-size:14px;padding:12px 5px}
  .mem-row{align-items:flex-start}
 }
-
-@media(display-mode:standalone){
- body{padding-top:env(safe-area-inset-top)}
-}
-
-:root{--princeton:#e77500;--princeton-dark:#b85c00;--ink:#171717;--cream:#f7f1e7;--paper:#fffdf8;--line:#ded4c5;--muted:#71695f;--soft:#eee4d6}
-body{background:var(--cream);color:var(--ink)}
-.app-page{display:none;min-height:100vh;padding-bottom:78px}.app-page.active-page{display:block}
-.app-header{height:68px;background:#171717;color:white;border-bottom:4px solid var(--princeton);display:flex;align-items:center;gap:14px;padding:10px 18px;position:sticky;top:0;z-index:20}
-.brand{font-weight:800;letter-spacing:.06em}.brand-wrap{display:flex;align-items:center;gap:10px}.brand-logo{width:42px;height:42px;border-radius:9px;object-fit:cover}.hero-feature{display:grid;grid-template-columns:1fr 220px;gap:28px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:24px}.hero-photo{width:100%;height:150px;object-fit:cover;object-position:center 30%;border-radius:10px}.study-panel{background:#fffaf2;border:1px solid var(--line);border-top:4px solid var(--princeton);border-radius:10px;padding:12px;margin:12px 0 18px}.study-panel .audio-status{margin:0 0 9px}.collapsible{background:var(--paper);border:1px solid var(--line);border-radius:9px;margin-top:12px;overflow:hidden}.collapsible summary{cursor:pointer;font-weight:800;font-size:12px;letter-spacing:.08em;padding:13px 14px;list-style:none}.collapsible summary::-webkit-details-marker{display:none}.collapsible summary:after{content:"＋";float:right;color:var(--princeton-dark);font-size:17px}.collapsible[open] summary:after{content:"−"}.collapsible .textbox{border:0;border-top:1px solid var(--line);border-radius:0;min-height:0}.sloka-label{margin-top:18px}.subtitle{font-size:12px;color:#d7d7d7;margin-top:2px}.lang-select{margin-left:auto;background:#292929;color:#fff;border:1px solid #555;border-radius:7px;padding:8px}
-.library-main{max-width:1050px;margin:auto;padding:38px 22px}.hero{margin-bottom:26px}.eyebrow{color:var(--princeton-dark);font-weight:800;letter-spacing:.13em;font-size:12px}.hero h1{font-family:Georgia,serif;font-size:38px;margin:7px 0}.hero p{color:var(--muted);margin:0}
-.book-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.book-card{background:var(--paper);border:1px solid var(--line);border-top:5px solid var(--princeton);border-radius:10px;padding:22px;text-align:left;min-height:132px;box-shadow:0 2px 8px #0000000d}.book-card:hover{transform:translateY(-1px);box-shadow:0 5px 15px #00000014}.book-card h2{font-family:Georgia,serif;margin:0 0 8px;font-size:22px}.book-card p{color:var(--muted);margin:0}.book-card .arrow{float:right;color:var(--princeton);font-size:25px}
-.back-btn,.icon-btn{background:#242424;color:white;border:1px solid #555}.book-title-wrap{min-width:0}.book-tools{display:flex;gap:8px;padding:12px 16px;background:var(--paper);border-bottom:1px solid var(--line);position:sticky;top:68px;z-index:15}.book-tools input{flex:1;min-width:100px;padding:10px;border:1px solid var(--line);border-radius:7px}.book-tools select{padding:10px;border:1px solid var(--line);border-radius:7px;background:white}.book-tools .count{align-self:center;white-space:nowrap;color:var(--muted)}
-.verse-list-page{max-width:950px;margin:18px auto;padding:0 16px}.verse-item{background:var(--paper);border:1px solid var(--line);border-left:4px solid transparent;border-radius:8px;margin:8px 0;padding:13px 14px}.verse-item:hover{background:#fff}.verse-item.active{background:#fff4e8;border-left-color:var(--princeton)}
-.player-header{justify-content:space-between}.player-header-title{font-family:Georgia,serif;font-weight:bold;font-size:18px}.player-content{max-width:900px;margin:auto;padding:24px 20px 100px}.heading{align-items:center}.source{color:var(--princeton-dark)}.textbox{background:var(--paper);border-color:var(--line);border-radius:8px}.label{font-size:12px;letter-spacing:.08em}.row button,.group button{border-color:var(--line);background:var(--paper)}#play,#memorize{background:var(--princeton);color:#111;border-color:var(--princeton-dark);font-weight:bold}.group{background:#fffaf2;border-color:var(--line)}.legend{background:var(--cream)}
-.bottom-nav{position:fixed;left:0;right:0;bottom:0;height:66px;background:#171717;display:flex;z-index:40;padding-bottom:env(safe-area-inset-bottom)}.bottom-nav button{flex:1;border:0;border-radius:0;background:#171717;color:#ddd;font-size:20px;padding:7px}.bottom-nav button span{display:block;font-size:11px;margin-top:3px}.bottom-nav button:active{background:#292929}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-@media(max-width:750px){.hero-feature{grid-template-columns:1fr;gap:14px;padding:16px}.hero-photo{height:170px}.brand-logo{width:38px;height:38px}.library-main{padding:25px 14px}.hero h1{font-size:30px}.book-grid{grid-template-columns:1fr}.book-card{min-height:105px}.book-tools{top:68px;flex-wrap:wrap}.book-tools input{width:100%;flex-basis:100%}.book-tools select{flex:1}.verse-list-page{margin-top:8px}.player-content{padding:16px 12px 92px}.content{overflow:visible}.row{grid-template-columns:1fr 1fr}.heading{gap:10px}.source{font-size:16px;text-align:right}.app-header{padding-left:12px;padding-right:12px}}
-
+@media(display-mode:standalone){body{padding-top:env(safe-area-inset-top)}}
 </style>
 </head>
 
 <body>
+<body>
+<header class="appbar">
+  <div class="brand">Memoriza Slokas</div>
+  <div class="spacer"></div>
+  <select id="language"><option value="en">English</option><option value="es">Español</option></select>
+</header>
 
-<section id="libraryPage" class="app-page active-page">
-  <header class="app-header"><div class="brand-wrap"><img class="brand-logo" src="./icon-192.png" alt="Memoriza Slokas"><div><div class="brand">MEMORIZA SLOKAS</div><div class="subtitle">Biblioteca de estudio</div></div></div><select id="language" class="lang-select"><option value="en">English</option><option value="es">Español</option></select></header>
-  <main class="library-main">
-    <div class="hero-feature"><div class="hero"><div class="eyebrow">BIBLIOTECA</div><h1>¿Qué quieres estudiar?</h1><p>Selecciona una obra para ver sus versos.</p></div><img class="hero-photo" src="./srila-prabhupada.png" alt="Śrīla Prabhupāda"></div>
-    <div id="bookGrid" class="book-grid"></div>
-  </main>
+<main>
+<section id="libraryPage" class="page active">
+  <div class="hero">
+    <h1 id="libraryTitle">Biblioteca</h1>
+    <p id="librarySubtitle">Selecciona un libro para comenzar una sesión de estudio.</p>
+  </div>
+  <div id="bookGrid" class="book-grid"></div>
 </section>
 
-<section id="bookPage" class="app-page">
-  <header class="app-header"><button id="backLibrary" class="back-btn">‹ Biblioteca</button><div class="book-title-wrap"><div id="bookTitle" class="brand">Versos</div><div id="bookSubtitle" class="subtitle"></div></div></header>
-  <div class="book-tools">
-    <label id="searchLabel" class="sr-only">Buscar:</label><input id="search" placeholder="Buscar">
-    <label id="sourceLabel" class="sr-only">Fuente:</label>
-    <select id="filter"><option value="all">Todos</option><option value="missing-es">🔴 Falta español</option><option value="needs-fix">🟡 Por corregir</option><option value="fixed-local">🔵 Corregido localmente</option><option>Bhagavad-gita</option><option>Srimad-Bhagavatam</option><option>Caitanya-caritamrta</option><option>Brahma-samhita</option><option>Otros</option></select>
+<section id="bookPage" class="page">
+  <div class="section-head">
+    <button class="backbtn" id="backLibrary">← Biblioteca</button>
+    <h1 id="bookTitle"></h1>
+  </div>
+  <div class="list-tools">
+    <input id="search" placeholder="Buscar">
+    <select id="filter">
+      <option value="all">Todos</option>
+      <option value="missing-es">🔴 Falta español</option>
+      <option value="needs-fix">🟡 Por corregir</option>
+      <option value="fixed-local">🔵 Corregido localmente</option>
+    </select>
     <span class="count" id="count"></span>
   </div>
-  <div class="verse-list-page" id="list"></div>
+  <div class="sidebar" id="list"></div>
 </section>
 
-<section id="playerPage" class="app-page">
-  <header class="app-header player-header"><button id="backBook" class="back-btn">‹ Versos</button><div class="player-header-title">Estudio</div><button id="homeBtn" class="icon-btn" title="Biblioteca">⌂</button></header>
-  <div class="content player-content">
-<div class="heading">
-<span id="rank"></span>
-<a class="source" id="source" href="#" target="_blank"
-rel="noopener noreferrer"></a>
-</div>
-
-<hr class="separator">
-
-<div class="study-panel">
-<div class="audio-status" id="audioStatus"></div>
-<div class="row">
-<button id="prev">⏮ Anterior</button>
-<button id="play">▶ Reproducir</button>
-<button id="stop">■ Parar</button>
-<button id="next">Siguiente ⏭</button>
-</div>
-<div class="group">
-<span class="legend" id="recordingLabel">Mi grabación</span>
-<div class="group-content rec-row">
-<button id="record">🎙 Grabar mi voz</button>
-<button id="deleteRecording">🗑 Borrar grabación</button>
-</div>
-</div>
-<div class="group">
-<span class="legend" id="memorizationLabel">Memorización</span>
-<div class="group-content mem-row">
-<label id="repeatLabel">Repetir</label>
-<select id="repeat"><option>1</option><option>3</option><option>5</option><option>10</option></select>
-<label id="pauseLabel">Pausa</label>
-<input id="pause" type="number" value="1.5" min="0" max="20" step=".5">
-<label id="speedLabel">Velocidad</label>
-<select id="speed"><option value=".70">0.70</option><option value=".85" selected>0.85</option><option value="1">1.00</option></select>
-<button id="memorize">▶ Memorizar</button>
-<label id="statusLabel">Estado</label>
-<select id="status"><option value="new">Nuevo</option><option value="learning">Aprendiendo</option><option value="memorized">Memorizado</option></select>
-</div>
-</div>
-</div>
-
-<div class="label sloka-label">ŚLOKA</div>
-<div class="textbox" id="verse"></div>
-
-<details class="collapsible"><summary id="wordForWordLabel">PALABRA POR PALABRA</summary><div class="textbox" id="wordForWord"></div></details>
-
-<details class="collapsible"><summary id="translationLabel">TRADUCCIÓN</summary><div class="textbox" id="translation"></div></details>
-
-<div class="row" style="margin-top:12px">
-<button id="editVerse">✏️ Editar</button>
-<button id="reviewStateBtn">⚑ Marcar para corregir</button>
-<button id="restoreVerse" style="display:none">↩ Restaurar original</button>
-<button id="exportEdits">💾 Backup</button>
-
-<button id="importEdits">♻️ Restaurar</button>
-<input type="file" id="importEditsFile" accept=".json,application/json" style="display:none">
-</div>
-
-<div id="verseEditor" style="display:none; margin-top:14px">
-  <label>Referencia</label>
-  <input id="editSource" style="width:100%; box-sizing:border-box; margin-bottom:10px">
-
-  <label>Opening / Inicio</label>
-  <input id="editOpening" style="width:100%; box-sizing:border-box; margin-bottom:10px">
-
-  <label>Enlace original</label>
-  <input id="editOriginalUrl" type="url"
-    placeholder="Automático si se deja vacío"
-    style="width:100%; box-sizing:border-box; margin-bottom:10px">
-
-  <label>ŚLOKA</label>
-  <textarea id="editVerseText" rows="7"
-    style="width:100%; box-sizing:border-box; margin-bottom:10px"></textarea>
-
-  <label>Word-for-word — English</label>
-  <textarea id="editWordForWordEnglish" rows="6"
-    style="width:100%; box-sizing:border-box; margin-bottom:10px"></textarea>
-
-  <label>Palabra por palabra — Español</label>
-  <textarea id="editWordForWordSpanish" rows="6"
-    style="width:100%; box-sizing:border-box; margin-bottom:10px"></textarea>
-
-  <label>English</label>
-  <textarea id="editEnglish" rows="6"
-    style="width:100%; box-sizing:border-box; margin-bottom:10px"></textarea>
-
-  <label>Español</label>
-  <textarea id="editSpanish" rows="6"
-    style="width:100%; box-sizing:border-box; margin-bottom:10px"></textarea>
-
-  <div class="row" style="margin-bottom:10px">
-    <button id="openSpanishVedabase">
-      🌐 Abrir en Vedabase Español
-    </button>
+<section id="playerPage" class="page">
+ <div class="player-shell">
+  <div class="player-top">
+    <button class="backbtn" id="backBook">← Lista</button>
+    <a class="source" id="source" href="#" target="_blank" rel="noopener noreferrer"></a>
+    <span class="counter" id="rank"></span>
   </div>
 
-  <div class="row">
-    <button id="saveVerseEdit">💾 Guardar</button>
-    <button id="saveNextSpanish">
-      💾 Guardar y siguiente sin español
-    </button>
-    <button id="cancelVerseEdit">Cancelar</button>
+  <div class="study-card">
+    <div class="label">ŚLOKA</div>
+    <div class="textbox" id="verse"></div>
+    <div class="label" id="wordForWordLabel">PALABRA POR PALABRA</div>
+    <div class="textbox" id="wordForWord"></div>
+    <div class="label" id="translationLabel">TRADUCCIÓN</div>
+    <div class="textbox" id="translation"></div>
   </div>
-</div>
 
-
-
-<audio id="audio" preload="metadata"></audio>
-
+  <div class="audio-status" id="audioStatus"></div>
+  <div class="player-controls">
+    <button id="prev">⏮ Anterior</button>
+    <button id="play">▶ Reproducir</button>
+    <button id="next">Siguiente ⏭</button>
   </div>
+  <div class="secondary-controls">
+    <button id="stop">■ Parar</button>
+    <button id="editVerse">✏️ Editar</button>
+    <button id="reviewStateBtn">⚑ Marcar para corregir</button>
+    <button id="restoreVerse" style="display:none">↩ Restaurar original</button>
+    <button id="exportEdits">💾 Backup</button>
+    <button id="importEdits">♻️ Restaurar</button>
+    <input type="file" id="importEditsFile" accept=".json,application/json" style="display:none">
+  </div>
+
+  <div id="verseEditor" style="display:none">
+    <label>Referencia</label><input id="editSource" style="width:100%;margin-bottom:10px">
+    <label>Opening / Inicio</label><input id="editOpening" style="width:100%;margin-bottom:10px">
+    <label>Enlace original</label><input id="editOriginalUrl" type="url" placeholder="Automático si se deja vacío" style="width:100%;margin-bottom:10px">
+    <label>ŚLOKA</label><textarea id="editVerseText" rows="7" style="width:100%;margin-bottom:10px"></textarea>
+    <label>Word-for-word — English</label><textarea id="editWordForWordEnglish" rows="6" style="width:100%;margin-bottom:10px"></textarea>
+    <label>Palabra por palabra — Español</label><textarea id="editWordForWordSpanish" rows="6" style="width:100%;margin-bottom:10px"></textarea>
+    <label>English</label><textarea id="editEnglish" rows="6" style="width:100%;margin-bottom:10px"></textarea>
+    <label>Español</label><textarea id="editSpanish" rows="6" style="width:100%;margin-bottom:10px"></textarea>
+    <div class="editor-actions">
+      <button id="openSpanishVedabase">🌐 Vedabase Español</button>
+      <button id="saveVerseEdit">💾 Guardar</button>
+      <button id="saveNextSpanish">💾 Guardar y siguiente</button>
+      <button id="cancelVerseEdit">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <span class="legend" id="recordingLabel">Mi grabación</span>
+    <div class="group-content rec-row">
+      <button id="record">🎙 Grabar mi voz</button>
+      <button id="deleteRecording">🗑 Borrar grabación</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <span class="legend" id="memorizationLabel">Memorización</span>
+    <div class="group-content mem-row">
+      <label id="repeatLabel">Repetir</label>
+      <select id="repeat"><option>1</option><option>3</option><option>5</option><option>10</option></select>
+      <label id="pauseLabel">Pausa</label>
+      <input id="pause" type="number" value="1.5" min="0" max="20" step=".5" style="width:65px">
+      <label id="speedLabel">Velocidad</label>
+      <select id="speed"><option value=".70">0.70</option><option value=".85" selected>0.85</option><option value="1">1.00</option></select>
+      <button id="memorize">▶ Memorizar</button>
+      <label id="statusLabel">Estado</label>
+      <select id="status"><option value="new">Nuevo</option><option value="learning">Aprendiendo</option><option value="memorized">Memorizado</option></select>
+    </div>
+  </div>
+  <audio id="audio" preload="metadata"></audio>
+ </div>
 </section>
+</main>
 
-<nav class="bottom-nav"><button id="navLibrary">▦<span>Biblioteca</span></button><button id="navStudy">▶<span>Estudiar</span></button><button id="navBackup">↥<span>Backup</span></button></nav>
+<nav class="bottomnav">
+ <button id="navLibrary" class="active">⌂ <span id="navLibraryLabel">Biblioteca</span></button>
+ <button id="navCurrent">▶ <span id="navStudyLabel">Estudiar</span></button>
+ <button id="navBackup">💾 <span id="navBackupLabel">Backup</span></button>
+</nav>
 
 <script>
 let verses=[];
@@ -291,7 +235,16 @@ const EDITSTORE="verseEdits";
 
 const translations={
  en:{
-   search:"Search:",
+   
+    library:"Library",
+    libraryQuestion:"What would you like to study?",
+    librarySubtitle:"Select a book to view its verses.",
+    backLibrary:"← Library",
+    backList:"← List",
+    study:"Study",
+    backup:"Backup",
+    selectedVerses:"selected verses",
+search:"Search:",
    searchPlaceholder:"Search",
    source:"Source:",
    all:"All",
@@ -330,7 +283,16 @@ const translations={
    recordFirst:"Record this verse first."
  },
  es:{
-   search:"Buscar:",
+   
+    library:"Biblioteca",
+    libraryQuestion:"¿Qué quieres estudiar?",
+    librarySubtitle:"Selecciona un libro para ver sus versos.",
+    backLibrary:"← Biblioteca",
+    backList:"← Lista",
+    study:"Estudiar",
+    backup:"Backup",
+    selectedVerses:"versos seleccionados",
+search:"Buscar:",
    searchPlaceholder:"Buscar",
    source:"Fuente:",
    all:"Todos",
@@ -379,13 +341,21 @@ function setLanguage(lang){
  const t=translations[currentLanguage];
 
  $("language").value=currentLanguage;
+  $("libraryTitle").textContent=t.libraryQuestion;
+  $("librarySubtitle").textContent=t.librarySubtitle;
+  $("backLibrary").textContent=t.backLibrary;
+  $("backBook").textContent=t.backList;
+  $("navLibraryLabel").textContent=t.library;
+  $("navStudyLabel").textContent=t.study;
+  $("navBackupLabel").textContent=t.backup;
+  document.documentElement.lang=currentLanguage;
  $("searchLabel").textContent=t.search;
  $("search").placeholder=t.searchPlaceholder;
  $("sourceLabel").textContent=t.source;
 
  const filterOptions=$("filter").options;
  filterOptions[0].textContent=t.all;
- filterOptions[8].textContent=t.other;
+ filterOptions[5].textContent=t.other;
 
  $("wordForWordLabel").textContent=t.wordForWord;
  $("translationLabel").textContent=t.translation;
@@ -543,11 +513,10 @@ function automaticVerseUrl(source){
 
  // Caitanya-caritamrta:
  // CC Adi 1.1 / CC Madhya 8.128 / CC Antya 20.12
- m=s.match(/^CC\s+(Adi|Mad|Madhya|Ant|Antya)\s+(\d+)\.(\d+)$/i);
- if(m){
-   const division={adi:"adi",mad:"madhya",madhya:"madhya",ant:"antya",antya:"antya"}[m[1].toLowerCase()];
-   return "https://vedabase.io/"+lang+"/library/cc/"+division+"/"+m[2]+"/"+m[3]+"/";
- }
+ m=s.match(/^CC\s+(Adi|Madhya|Antya)\s+(\d+)\.(\d+)$/i);
+ if(m)
+   return "https://vedabase.io/"+lang+"/library/cc/"+
+     m[1].toLowerCase()+"/"+m[2]+"/"+m[3]+"/";
 
  return "";
 }
@@ -565,36 +534,51 @@ function current(){
  return verses.find(v=>v.rank===currentRank);
 }
 
-
-
+let currentBook="all";
 const BOOKS=[
- {key:"Bhagavad-gita",label:"Bhagavad-gītā"},
- {key:"Srimad-Bhagavatam",label:"Śrīmad-Bhāgavatam"},
- {key:"Caitanya-caritamrta",label:"Caitanya-caritāmṛta"},
- {key:"Brahma-samhita",label:"Brahma-saṁhitā"},
- {key:"Otros",label:"Otros versos"}
+ ["Bhagavad-gita","Bhagavad-gītā"],
+ ["Srimad-Bhagavatam","Śrīmad-Bhāgavatam"],
+ ["Caitanya-caritamrta","Caitanya-caritāmṛta"],
+ ["Brahma-samhita","Brahma-saṁhitā"],
+ ["Otros","Otros versos"]
 ];
-let currentBook=null;
+
 function showPage(id){
- document.querySelectorAll(".app-page").forEach(p=>p.classList.remove("active-page"));
- const page=$(id); if(page) page.classList.add("active-page");
+ document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===id));
+ $("navLibrary").classList.toggle("active",id==="libraryPage");
+ $("navCurrent").classList.toggle("active",id==="playerPage");
  window.scrollTo(0,0);
 }
-function bookItems(key){return verses.filter(v=>category(v.source)===key)}
+function bookVerses(book){
+ return verses.filter(v=>category(v.source)===book);
+}
 function renderBooks(){
- const grid=$("bookGrid"); if(!grid)return; grid.innerHTML="";
- BOOKS.forEach(b=>{
-   const n=bookItems(b.key).length;
-   const card=document.createElement("button"); card.className="book-card";
-   card.innerHTML='<span class="arrow">›</span><h2>'+b.label+'</h2><p>'+n+' '+(currentLanguage==="es"?"versos":"verses")+'</p>';
-   card.onclick=()=>openBook(b.key,b.label); grid.appendChild(card);
+ const grid=$("bookGrid"); grid.innerHTML="";
+ BOOKS.forEach(([key,label])=>{
+   const n=bookVerses(key).length;
+   if(!n)return;
+   const b=document.createElement("button");
+   b.className="book-card";
+   b.innerHTML="<h2>"+label+"</h2><div class='book-count'>"+n+" "+translations[currentLanguage].selectedVerses+"</div>";
+   b.onclick=()=>openBook(key,label);
+   grid.appendChild(b);
  });
 }
 async function openBook(key,label){
- currentBook=key; $("bookTitle").textContent=label; $("bookSubtitle").textContent=currentLanguage==="es"?"Selecciona un verso":"Select a verse";
- $("filter").value="all"; $("search").value=""; await applyFilter(); showPage("bookPage");
+ currentBook=key;
+ $("bookTitle").textContent=label || (BOOKS.find(x=>x[0]===key)||[])[1] || key;
+ $("search").value="";
+ $("filter").value="all";
+ await applyFilter();
+ showPage("bookPage");
 }
-async function openPlayer(rank){await selectVerse(rank); showPage("playerPage")}
+function currentSequence(){
+ return currentBook==="all" ? filtered : filtered.filter(v=>category(v.source)===currentBook);
+}
+function openPlayer(rank){
+ selectVerse(rank).then(()=>showPage("playerPage"));
+}
+
 
 function reviewKey(rank){ return "review_state_"+rank; }
 function getReviewState(rank){ return localStorage.getItem(reviewKey(rank))||""; }
@@ -629,12 +613,13 @@ async function applyFilter(){
    const v=edit ? {...original,...edit} : original;
 
    const reviewState=getReviewState(v.rank);
-   const inBook=!currentBook || category(v.source)===currentBook;
-   const matchesSource=inBook && (
+   const matchesBook=currentBook==="all" || category(v.source)===currentBook;
+   const matchesSource=matchesBook && (
      f==="missing-es" ? !(v.translation_es||"").trim()
      : f==="needs-fix" ? reviewState==="needs-fix"
      : f==="fixed-local" ? reviewState==="fixed-local"
-     : (f==="all" || category(v.source)===f));
+     : true
+   );
 
    const searchable=[
      v.rank,
@@ -712,9 +697,9 @@ async function selectVerse(rank){
 
  localStorage.setItem("last_rank",rank);
 
- const seq=currentBook?bookItems(currentBook):verses;
- const pos=seq.findIndex(x=>x.rank===v.rank);
- $("rank").textContent=(pos>=0?(pos+1):v.rank)+(currentLanguage==="es"?" de ":" of ")+seq.length+" · #"+String(v.rank).padStart(3,"0");
+ const seq=bookVerses(currentBook);
+ const pos=Math.max(0,seq.findIndex(x=>x.rank===v.rank));
+ $("rank").textContent=(pos+1)+" / "+seq.length+" · #"+String(v.rank).padStart(3,"0");
  $("source").textContent=v.source||"";
 
  const originalUrl=v.original_url || automaticVerseUrl(v.source);
@@ -1398,19 +1383,32 @@ $("status").onchange=()=>{
  localStorage.setItem("status_"+currentRank,$("status").value);
 };
 
-$("prev").onclick=()=>{ const seq=currentBook?bookItems(currentBook):filtered; const i=seq.findIndex(v=>v.rank===currentRank); if(i>0)selectVerse(seq[i-1].rank); };
-$("next").onclick=()=>{ const seq=currentBook?bookItems(currentBook):filtered; const i=seq.findIndex(v=>v.rank===currentRank); if(i>=0&&i<seq.length-1)selectVerse(seq[i+1].rank); };
-$("backLibrary").onclick=()=>{stopEverything();renderBooks();showPage("libraryPage")};
-$("backBook").onclick=()=>{stopEverything();showPage("bookPage")};
-$("homeBtn").onclick=()=>{stopEverything();renderBooks();showPage("libraryPage")};
-$("navLibrary").onclick=()=>{stopEverything();renderBooks();showPage("libraryPage")};
-$("navStudy").onclick=()=>{if(currentRank!==null)showPage("playerPage")};
-$("navBackup").onclick=()=>$("exportEdits").click();
+$("prev").onclick=()=>{
+ const seq=bookVerses(currentBook);
+ const i=seq.findIndex(v=>v.rank===currentRank);
+ if(i>0)selectVerse(seq[i-1].rank);
+};
+
+$("next").onclick=()=>{
+ const seq=bookVerses(currentBook);
+ const i=seq.findIndex(v=>v.rank===currentRank);
+ if(i>=0 && i<seq.length-1)selectVerse(seq[i+1].rank);
+};
 
 $("search").oninput=applyFilter;
 $("filter").onchange=applyFilter;
 
-$("language").onchange=()=>{ setLanguage($("language").value); renderBooks(); if(currentRank!==null) selectVerse(currentRank); };
+$("language").onchange=()=>{
+ setLanguage($("language").value);
+ renderBooks();
+ if(currentRank!==null && $("playerPage").classList.contains("active")) selectVerse(currentRank);
+};
+
+$("backLibrary").onclick=()=>{ stopEverything(); renderBooks(); showPage("libraryPage"); };
+$("backBook").onclick=()=>{ stopEverything(); showPage("bookPage"); };
+$("navLibrary").onclick=()=>{ stopEverything(); renderBooks(); showPage("libraryPage"); };
+$("navCurrent").onclick=()=>{ if(currentRank!==null) showPage("playerPage"); };
+$("navBackup").onclick=()=>$("exportEdits").click();
 
 setLanguage(currentLanguage);
 
@@ -1432,7 +1430,7 @@ Promise.all([
  currentRank=verses.some(x=>x.rank===saved)?saved:verses[0].rank;
 
  renderBooks();
- applyFilter().then(()=>selectVerse(currentRank)).then(()=>showPage("libraryPage"));
+ showPage("libraryPage");
 }).catch(e=>{
  document.body.innerHTML="<h2>Error cargando la aplicación</h2><pre>"+
  e.message+"</pre>";

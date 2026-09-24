@@ -102,6 +102,11 @@ button:active{background:#ddd}
  .content{padding:14px}
  .heading{font-size:14px}
  .source{font-size:17px}
+.verse-item.needs-fix{background:#fff3b0;border-left:5px solid #d39e00}
+.verse-item.fixed-local{background:#dbeafe;border-left:5px solid #2563eb}
+.verse-item.active.needs-fix,.verse-item.active.fixed-local{outline:2px solid currentColor}
+#reviewStateBtn.needs-fix{background:#fff3b0}
+#reviewStateBtn.fixed-local{background:#dbeafe}
  #verse{font-size:19px;min-height:130px}
  .row{grid-template-columns:1fr 1fr}
  .mem-row{align-items:flex-start}
@@ -126,6 +131,8 @@ button:active{background:#ddd}
 <select id="filter">
 <option value="all">Todos</option>
 <option value="missing-es">🔴 Falta español</option>
+<option value="needs-fix">🟡 Por corregir</option>
+<option value="fixed-local">🔵 Corregido localmente</option>
 <option>Bhagavad-gita</option>
 <option>Srimad-Bhagavatam</option>
 <option>Caitanya-caritamrta</option>
@@ -160,6 +167,7 @@ rel="noopener noreferrer"></a>
 
 <div class="row" style="margin-top:12px">
 <button id="editVerse">✏️ Editar</button>
+<button id="reviewStateBtn">⚑ Marcar para corregir</button>
 <button id="restoreVerse" style="display:none">↩ Restaurar original</button>
 <button id="exportEdits">💾 Backup</button>
 
@@ -566,6 +574,29 @@ function current(){
  return verses.find(v=>v.rank===currentRank);
 }
 
+
+function reviewKey(rank){ return "review_state_"+rank; }
+function getReviewState(rank){ return localStorage.getItem(reviewKey(rank))||""; }
+function setReviewState(rank,state){
+ if(state) localStorage.setItem(reviewKey(rank),state);
+ else localStorage.removeItem(reviewKey(rank));
+}
+function updateReviewButton(){
+ const b=$("reviewStateBtn");
+ if(!b || currentRank===null)return;
+ const st=getReviewState(currentRank);
+ b.classList.remove("needs-fix","fixed-local");
+ if(st==="needs-fix"){
+   b.textContent=currentLanguage==="es"?"🟡 Por corregir":"🟡 Needs correction";
+   b.classList.add("needs-fix");
+ }else if(st==="fixed-local"){
+   b.textContent=currentLanguage==="es"?"🔵 Corregido localmente":"🔵 Corrected locally";
+   b.classList.add("fixed-local");
+ }else{
+   b.textContent=currentLanguage==="es"?"⚑ Marcar para corregir":"⚑ Mark for correction";
+ }
+}
+
 async function applyFilter(){
  const q=$("search").value.toLowerCase().trim();
  const f=$("filter").value;
@@ -576,10 +607,12 @@ async function applyFilter(){
    const edit=edits[String(original.rank)];
    const v=edit ? {...original,...edit} : original;
 
+   const reviewState=getReviewState(v.rank);
    const matchesSource=
-     f==="missing-es"
-       ? !(v.translation_es||"").trim()
-       : (f==="all" || category(v.source)===f);
+     f==="missing-es" ? !(v.translation_es||"").trim()
+     : f==="needs-fix" ? reviewState==="needs-fix"
+     : f==="fixed-local" ? reviewState==="fixed-local"
+     : (f==="all" || category(v.source)===f);
 
    const searchable=[
      v.rank,
@@ -617,11 +650,14 @@ async function renderList(){
    const v=edit ? {...original,...edit} : original;
 
    const d=document.createElement("div");
-   d.className="verse-item"+(v.rank===currentRank?" active":"");
+   const reviewState=getReviewState(v.rank);
+   d.className="verse-item"+(v.rank===currentRank?" active":"")+
+     (reviewState==="needs-fix"?" needs-fix":reviewState==="fixed-local"?" fixed-local":"");
 
    const spanishDone=!!(v.translation_es||"").trim();
 
    d.textContent=
+     (reviewState==="needs-fix" ? "🟡 " : reviewState==="fixed-local" ? "🔵 " : "")+
      (!spanishDone ? "🔴 " : "")+
      (edit ? "✏️ " : "")+
      "#"+String(v.rank).padStart(3,"0")+"  "+
@@ -645,6 +681,7 @@ async function selectVerse(rank){
  stopEverything();
 
  currentRank=rank;
+ updateReviewButton();
  const original=current();
  if(!original)return;
 
@@ -911,6 +948,15 @@ function editorHasUnsavedChanges(){
  );
 }
 
+
+$("reviewStateBtn").onclick=async()=>{
+ const st=getReviewState(currentRank);
+ const next=st===""?"needs-fix":st==="needs-fix"?"fixed-local":"";
+ setReviewState(currentRank,next);
+ updateReviewButton();
+ await applyFilter();
+};
+
 $("editVerse").onclick=async()=>{
  const original=current();
  if(!original)return;
@@ -1104,6 +1150,12 @@ $("exportEdits").onclick=async()=>{
    if(status) statuses[String(v.rank)]=status;
  });
 
+ const reviewStates={};
+ verses.forEach(v=>{
+   const st=getReviewState(v.rank);
+   if(st) reviewStates[String(v.rank)]=st;
+ });
+
  const backup={
    app:"Memoriza Slokas",
    type:"fullBackup",
@@ -1117,6 +1169,7 @@ $("exportEdits").onclick=async()=>{
    },
 
    edits,
+   reviewStates,
 
    // Reservado para futuras funciones.
    favorites:{},
@@ -1198,7 +1251,14 @@ $("importEditsFile").onchange=async e=>{
 
      await importVerseEdits(data.edits);
 
-     await applyFilter();
+     
+ if(data && data.reviewStates){
+   Object.entries(data.reviewStates).forEach(([rank,state])=>{
+     if(state==="needs-fix" || state==="fixed-local") setReviewState(rank,state);
+   });
+ }
+ updateReviewButton();
+ await applyFilter();
      await selectVerse(currentRank);
 
      alert(currentLanguage==="es"
